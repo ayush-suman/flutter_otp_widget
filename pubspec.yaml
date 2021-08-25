@@ -1,6 +1,8 @@
 name: otp_widget
 description: Generic OTP Widget
 version: 1.0.0
+authors:
+  - Ayush Suman
 homepage: https://github.com/Ayush-Suman/flutter_otp_widget
 
 environment:
