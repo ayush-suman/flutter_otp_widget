@@ -1,5 +1,7 @@
 library otp_widget;
 
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 
 class OTPWidget extends StatefulWidget{
@@ -35,6 +37,7 @@ class _OTPWidgetState extends State<OTPWidget>{
   late final List<TextEditingController> controllers;
   late final TextEditingController mainController;
   late Function() listener;
+  late final Timer timer;
 
   @override
   void initState() {
@@ -53,6 +56,19 @@ class _OTPWidgetState extends State<OTPWidget>{
     };
     listener();
     mainController.addListener(listener);
+    timer = Timer.periodic(Duration(milliseconds: 100), (timer) {
+      try {
+        mainController.text =
+        "${controllers[0].text.characters.last}${controllers[1].text.characters
+            .last}${controllers[2].text.characters.last}${controllers[3].text
+            .characters.last}${controllers[4].text.characters
+            .last}${controllers[5].text.characters.last}";
+        print(mainController.text);
+      }catch(e){
+        print(e);
+      }
+    });
+
     super.initState();
   }
 
@@ -118,6 +134,7 @@ class _OTPWidgetState extends State<OTPWidget>{
   @override
   void dispose() {
     mainController.removeListener(listener);
+    timer.cancel();
     super.dispose();
   }
 }
