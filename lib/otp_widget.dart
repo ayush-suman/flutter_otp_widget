@@ -1,7 +1,6 @@
 library otp_widget;
 
 import 'dart:async';
-
 import 'package:flutter/material.dart';
 
 class OTPWidget extends StatefulWidget{
@@ -30,6 +29,10 @@ class OTPWidget extends StatefulWidget{
   @override
   State<OTPWidget> createState() => _OTPWidgetState();
 
+  void setOTP(){
+
+  }
+
 }
 
 class _OTPWidgetState extends State<OTPWidget>{
@@ -37,7 +40,7 @@ class _OTPWidgetState extends State<OTPWidget>{
   late final List<TextEditingController> controllers;
   late final TextEditingController mainController;
   late Function() listener;
-  late final Timer timer;
+  late Function() reverseListener;
 
   @override
   void initState() {
@@ -47,6 +50,7 @@ class _OTPWidgetState extends State<OTPWidget>{
     listener = () {
       for (int i = 0; i < widget.otpSize; i++) {
         try {
+          if(controllers[i].text!=mainController.text.characters.elementAt(i))
           controllers[i].text =
               mainController.text.characters.elementAt(i);
         } catch (e) {
@@ -56,7 +60,8 @@ class _OTPWidgetState extends State<OTPWidget>{
     };
     listener();
     mainController.addListener(listener);
-    timer = Timer.periodic(Duration(milliseconds: 100), (timer) {
+
+    reverseListener = (){
       try {
         mainController.text =
         "${controllers[0].text.characters.last}${controllers[1].text.characters
@@ -67,8 +72,11 @@ class _OTPWidgetState extends State<OTPWidget>{
       }catch(e){
         print(e);
       }
-    });
+    };
 
+    for (int i = 0; i < widget.otpSize; i++) {
+      controllers[i].addListener(reverseListener);
+    }
     super.initState();
   }
 
@@ -134,7 +142,9 @@ class _OTPWidgetState extends State<OTPWidget>{
   @override
   void dispose() {
     mainController.removeListener(listener);
-    timer.cancel();
+    for (int i = 0; i < widget.otpSize; i++) {
+      controllers[i].removeListener(reverseListener);
+    }
     super.dispose();
   }
 }

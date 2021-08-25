@@ -1,3 +1,3 @@
-## 0.0.1
+## 1.1.0
 
-* TODO: Describe initial release.
+* OTP Widget that accepts a text editing controller
