@@ -7,8 +7,11 @@ class OTPWidget extends StatefulWidget{
   final String? title;
   final TextStyle? titleStyle;
   final TextEditingController? controller;
-  final Color? borderColor;
-  final Color? focusedColor;
+  final InputBorder? enabledBorder;
+  final InputBorder? disabledBorder;
+  final InputBorder? focusedBorder;
+  final InputBorder? errorBorder;
+  final InputBorder? focusedErrorBorder;
   final Color? cursorColor;
   final String? hint;
   final TextStyle? hintStyle;
@@ -21,17 +24,16 @@ class OTPWidget extends StatefulWidget{
     this.otpSize=6,
     this.hint,
     this.hintStyle,
-    this.borderColor,
-    this.focusedColor,
-    this.cursorColor
+    this.focusedBorder,
+    this.enabledBorder,
+    this.disabledBorder,
+    this.errorBorder,
+    this.focusedErrorBorder,
+    this.cursorColor,
   });
 
   @override
   State<OTPWidget> createState() => _OTPWidgetState();
-
-  void setOTP(){
-
-  }
 
 }
 
@@ -40,7 +42,7 @@ class _OTPWidgetState extends State<OTPWidget>{
   late final List<TextEditingController> controllers;
   late final TextEditingController mainController;
   late Function() listener;
-  late Function() reverseListener;
+  late Function() callback;
 
   @override
   void initState() {
@@ -61,7 +63,7 @@ class _OTPWidgetState extends State<OTPWidget>{
     listener();
     mainController.addListener(listener);
 
-    reverseListener = (){
+    callback = (){
       try {
         mainController.text =
         "${controllers[0].text.characters.last}${controllers[1].text.characters
@@ -73,10 +75,8 @@ class _OTPWidgetState extends State<OTPWidget>{
         print(e);
       }
     };
-
-    for (int i = 0; i < widget.otpSize; i++) {
-      controllers[i].addListener(reverseListener);
-    }
+    
+    
     super.initState();
   }
 
@@ -84,7 +84,7 @@ class _OTPWidgetState extends State<OTPWidget>{
 
   @override
   Widget build(BuildContext context) {
-    final List<TextEditingController> controllers = [];//useOtpControllersWithTextEditingController(controller);
+    //final List<TextEditingController> controllers = [];//useOtpControllersWithTextEditingController(controller);
 
     return Column(
         mainAxisSize: MainAxisSize.min,
@@ -108,9 +108,11 @@ class _OTPWidgetState extends State<OTPWidget>{
                       if(index==widget.otpSize-1)
                       {
                         controllers[index].text = n.characters.last;
+                        callback();
                         focusNodes[index].unfocus();
                       }else{
                         controllers[index].text = n.characters.last;
+                        callback();
                         focusNodes[index].unfocus();
                         focusNodes[index+1].requestFocus();
                         Future.delayed(Duration(milliseconds: 100),()
@@ -125,13 +127,16 @@ class _OTPWidgetState extends State<OTPWidget>{
                       controllers[index].selection = TextSelection.collapsed(offset: controllers[index].text.length);
                     },
                     focusNode: focusNodes[index],
-                    cursorColor: widget.cursorColor??widget.focusedColor,
+                    cursorColor: widget.cursorColor??widget.focusedBorder?.borderSide.color??null,
                     decoration: InputDecoration(
                         hintText: widget.hint,
                         hintStyle: widget.hintStyle,
                         alignLabelWithHint: true,
-                        focusedBorder: OutlineInputBorder(borderSide: BorderSide(color: widget.focusedColor??Colors.black, width: 2), borderRadius: BorderRadius.circular(10)),
-                        enabledBorder: OutlineInputBorder(borderSide: BorderSide(color: widget.borderColor??Colors.grey), borderRadius: BorderRadius.circular(10))
+                        focusedBorder: widget.focusedBorder,
+                        enabledBorder: widget.enabledBorder,
+                        disabledBorder: widget.disabledBorder,
+                        errorBorder: widget.errorBorder,
+                        focusedErrorBorder: widget.focusedErrorBorder,
                     ),
                   ), flex: 2,),
               )
@@ -142,9 +147,7 @@ class _OTPWidgetState extends State<OTPWidget>{
   @override
   void dispose() {
     mainController.removeListener(listener);
-    for (int i = 0; i < widget.otpSize; i++) {
-      controllers[i].removeListener(reverseListener);
-    }
+    
     super.dispose();
   }
 }
