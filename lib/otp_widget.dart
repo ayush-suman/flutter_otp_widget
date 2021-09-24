@@ -2,8 +2,9 @@ library otp_widget;
 
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
-class OTPWidget extends StatefulWidget{
+class OTPWidget extends StatefulWidget {
   final String? title;
   final TextStyle? titleStyle;
   final TextEditingController? controller;
@@ -16,12 +17,12 @@ class OTPWidget extends StatefulWidget{
   final String? hint;
   final TextStyle? hintStyle;
   final int otpSize;
-  
+
   OTPWidget({
-    this.title, 
-    this.titleStyle, 
+    this.title,
+    this.titleStyle,
     this.controller,
-    this.otpSize=6,
+    this.otpSize = 6,
     this.hint,
     this.hintStyle,
     this.focusedBorder,
@@ -34,10 +35,9 @@ class OTPWidget extends StatefulWidget{
 
   @override
   State<OTPWidget> createState() => _OTPWidgetState();
-
 }
 
-class _OTPWidgetState extends State<OTPWidget>{
+class _OTPWidgetState extends State<OTPWidget> {
   late final List<FocusNode> focusNodes;
   late final List<TextEditingController> controllers;
   late final TextEditingController mainController;
@@ -46,15 +46,16 @@ class _OTPWidgetState extends State<OTPWidget>{
 
   @override
   void initState() {
-    mainController = widget.controller??TextEditingController();
+    mainController = widget.controller ?? TextEditingController();
     focusNodes = List.generate(widget.otpSize, (index) => FocusNode());
-    controllers = List.generate(widget.otpSize, (index) => TextEditingController());
+    controllers =
+        List.generate(widget.otpSize, (index) => TextEditingController());
     listener = () {
       for (int i = 0; i < widget.otpSize; i++) {
         try {
-          if(controllers[i].text!=mainController.text.characters.elementAt(i))
-          controllers[i].text =
-              mainController.text.characters.elementAt(i);
+          if (controllers[i].text !=
+              mainController.text.characters.elementAt(i))
+            controllers[i].text = mainController.text.characters.elementAt(i);
         } catch (e) {
           print("No value in $i otp field");
         }
@@ -63,24 +64,18 @@ class _OTPWidgetState extends State<OTPWidget>{
     listener();
     mainController.addListener(listener);
 
-    callback = (){
+    callback = () {
       try {
         mainController.text =
-        "${controllers[0].text.characters.last}${controllers[1].text.characters
-            .last}${controllers[2].text.characters.last}${controllers[3].text
-            .characters.last}${controllers[4].text.characters
-            .last}${controllers[5].text.characters.last}";
+            "${controllers[0].text.characters.last}${controllers[1].text.characters.last}${controllers[2].text.characters.last}${controllers[3].text.characters.last}${controllers[4].text.characters.last}${controllers[5].text.characters.last}";
         print(mainController.text);
-      }catch(e){
+      } catch (e) {
         print(e);
       }
     };
-    
-    
+
     super.initState();
   }
-
-
 
   @override
   Widget build(BuildContext context) {
@@ -90,45 +85,66 @@ class _OTPWidgetState extends State<OTPWidget>{
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          widget.title!=null?Padding(
-              padding: const EdgeInsets.only(bottom: 10),
-              child:Text(widget.title!, style: widget.titleStyle)
-          ):SizedBox(),
+          widget.title != null
+              ? Padding(
+                  padding: const EdgeInsets.only(bottom: 10),
+                  child: Text(widget.title!, style: widget.titleStyle))
+              : SizedBox(),
           Row(
               mainAxisSize: MainAxisSize.min,
-              children:
-              List.generate(widget.otpSize, (index) =>
-                  Flexible(child: TextField(
-                    textAlign: TextAlign.center,
-                    showCursor: false,
-                    enableInteractiveSelection: false,
-                    keyboardType: TextInputType.number,
-                    controller: controllers[index],
-                    onChanged: (n){
-                      if(index==widget.otpSize-1)
-                      {
-                        controllers[index].text = n.characters.last;
-                        callback();
-                        focusNodes[index].unfocus();
-                      }else{
-                        controllers[index].text = n.characters.last;
-                        callback();
-                        focusNodes[index].unfocus();
-                        focusNodes[index+1].requestFocus();
-                        Future.delayed(Duration(milliseconds: 100),()
-                        {
-                          controllers[index].selection = TextSelection.collapsed(
-                              offset: controllers[index].text.length);
-                        });
+              children: List.generate(
+                widget.otpSize,
+                (index) => Flexible(
+                  child: RawKeyboardListener(
+                    focusNode: FocusNode(),
+                    onKey: (event) {
+                      if (event.logicalKey == LogicalKeyboardKey.backspace &&
+                          event.runtimeType.toString() == 'RawKeyDownEvent') {
+                        if (index == 0) {
+                          controllers[index].text = "";
+                          callback();
+                          focusNodes[index].unfocus();
+                        } else {
+                          controllers[index].text = "";
+                          callback();
+                          focusNodes[index].unfocus();
+                          focusNodes[index - 1].requestFocus();
+                        }
                       }
                     },
-                    onTap: (){
-                      focusNodes[index].requestFocus();
-                      controllers[index].selection = TextSelection.collapsed(offset: controllers[index].text.length);
-                    },
-                    focusNode: focusNodes[index],
-                    cursorColor: widget.cursorColor??widget.focusedBorder?.borderSide.color??null,
-                    decoration: InputDecoration(
+                    child: TextField(
+                      textAlign: TextAlign.center,
+                      showCursor: false,
+                      enableInteractiveSelection: false,
+                      keyboardType: TextInputType.number,
+                      controller: controllers[index],
+                      onChanged: (n) {
+                        if (index == widget.otpSize - 1) {
+                          controllers[index].text = n.characters.last;
+                          callback();
+                          focusNodes[index].unfocus();
+                        } else {
+                          controllers[index].text = n.characters.last;
+                          callback();
+                          focusNodes[index].unfocus();
+                          focusNodes[index + 1].requestFocus();
+                          Future.delayed(Duration(milliseconds: 100), () {
+                            controllers[index].selection =
+                                TextSelection.collapsed(
+                                    offset: controllers[index].text.length);
+                          });
+                        }
+                      },
+                      onTap: () {
+                        focusNodes[index].requestFocus();
+                        controllers[index].selection = TextSelection.collapsed(
+                            offset: controllers[index].text.length);
+                      },
+                      focusNode: focusNodes[index],
+                      cursorColor: widget.cursorColor ??
+                          widget.focusedBorder?.borderSide.color ??
+                          null,
+                      decoration: InputDecoration(
                         hintText: widget.hint,
                         hintStyle: widget.hintStyle,
                         alignLabelWithHint: true,
@@ -137,17 +153,19 @@ class _OTPWidgetState extends State<OTPWidget>{
                         disabledBorder: widget.disabledBorder,
                         errorBorder: widget.errorBorder,
                         focusedErrorBorder: widget.focusedErrorBorder,
+                      ),
                     ),
-                  ), flex: 2,),
-              )
-          )
+                  ),
+                  flex: 2,
+                ),
+              ))
         ]);
   }
 
   @override
   void dispose() {
     mainController.removeListener(listener);
-    
+
     super.dispose();
   }
 }
